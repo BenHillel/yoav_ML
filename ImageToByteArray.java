@@ -8,14 +8,14 @@ public class ImageToByteArray {
 
     String image_location;
 
-    public ImageToByteArray(String image_location) {
-        this.image_location = image_location;
+
+    public ImageToByteArray(String filePath) {
+        this.image_location = filePath;
     }
 
     public int[][] convertTo2D() throws IOException {
 
-        File imgPath = new File(this.image_location);
-        BufferedImage image = ImageIO.read(imgPath);
+        BufferedImage image = ImageIO.read(new File(this.image_location));
 
         final byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
         final int width = image.getWidth();
@@ -58,4 +58,4 @@ public class ImageToByteArray {
         return result;
     }
 
-}
+} 
