@@ -1,15 +1,21 @@
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
+import java.util.Scanner;
 
 public class NumNet {
 	
+	String imagesMats_path = "C:\\Users\\user\\Documents\\Python\\image staff\\imagesMats.txt";
+	String imagesVals_path = "C:\\Users\\user\\Documents\\Python\\image staff\\imagesVals.txt";
+	
 	double[][] trainingData;
 	int[] trainingValues;
-	int examples = 5;
+	int examples = getLength(imagesVals_path);
 	int secceses;
 	int trys;
+	int maxSecceses;
 	
 	double[] input;
 	double[] lair1;
@@ -23,6 +29,8 @@ public class NumNet {
 	double[] biase3;
 	int inputSize = 3600;
 	int expValue;
+	
+
 	
 	public NumNet(int len1,int len2) {
 		this.input = new double[inputSize];
@@ -40,6 +48,8 @@ public class NumNet {
 		this.trainingValues = new int[examples];
 		this.secceses=0;
 		this.trys=1;
+		this.maxSecceses=0;
+		
 	}
 	
 	public void randomSetUp() {
@@ -58,6 +68,8 @@ public class NumNet {
 		for(int i=0;i<inputSize;i++) {
 			this.input[i] = Math.random();
 		}
+		
+		
 		//biases and weights setup -----------------------
 		for(int i=0;i<len1;i++) {
 			this.biase1[i] = (Math.random()*10)-5;
@@ -79,6 +91,27 @@ public class NumNet {
 		}
 		
 	}
+	
+	public void NotRandomSetUp() {
+		int len1 = this.lair1.length;
+		int len2 = this.lair2.length;
+		
+		
+		this.trainingData = readData(imagesMats_path,examples,inputSize);
+		
+		this.trainingValues = readDataInt(imagesVals_path, examples);
+		
+		//biases and weights setup -----------------------
+		this.biase1 = readDataDouble("biase1.txt",len1);
+		this.biase2 = readDataDouble("biase2.txt",len2);
+		this.biase3 = readDataDouble("biase3.txt",10);
+		
+		this.weights1 = readData("weights1.txt",len1,inputSize);
+		this.weights2 = readData("weights2.txt",len2,len1);
+		this.weights3 = readData("weights3.txt",10,len2);
+		
+	}
+
 	
 	public double sigmoid(double num) {
 		return 1/(1+Math.pow(Math.E,-num));
@@ -116,7 +149,18 @@ public class NumNet {
 		}
 		return index;
 	}
-
+	public int max(int x, int y) {
+		if(x>=y) {
+			return x;
+		}
+		return y;
+	}
+	public int min(int x, int y) {
+		if(x<=y) {
+			return x;
+		}
+		return y;
+	}
 	
 	public int calculate() {
 		this.lair1 = sigmoid(add(multiply(this.weights1,this.input),this.biase1));
@@ -184,26 +228,37 @@ public class NumNet {
 		}
 	}
 	
-	public void train(int index,double alpha) {
+	public void train(int index,double alpha,boolean show) {
 		this.input = this.trainingData[index];
 		this.expValue = this.trainingValues[index];
-		System.out.println(this.expValue+"  |  "+this.calculate()+"   seccess rate = "+(this.secceses/(double)this.trys)+'%');
-		//System.out.println(this.cost());
-		this.trys++;
+		String didIt = "X";
 		if(this.expValue==this.calculate()) {
 			this.secceses++;
+			didIt = "V";
+		}
+		this.trys++;
+		if(show) {
+			if (this.maxSecceses < this.secceses) {
+				this.maxSecceses = this.secceses;
+				this.updateData();
+				System.out.println("---DATA_SAVED---");
+			}
+			
+			System.out.println(this.expValue+"  |  "+this.calculate()+"   "+didIt+"   seccess rate = "+(100*this.secceses/(double)this.trys)+'%');
+			//System.out.println(this.cost());
+			this.trys = 0;
+			this.secceses = 0;
 		}
 		this.linearRegretion(alpha);
-		
 	}
 	
 	public void updateData() {
 		try {
 			File weights1 = new File("weights1.txt");
 			if(weights1.createNewFile()) {
-				System.out.println("weights1 created");
+				//System.out.println("weights1 created");
 			}else {
-				System.out.println("weights1 already exist");
+				//System.out.println("weights1 already exist");
 			}
 			FileWriter weights1W = new FileWriter("weights1.txt");
 			for(int i=0;i<this.weights1.length;i++) {
@@ -219,9 +274,9 @@ public class NumNet {
 			//-------------------------------------------------------
 			File weights2 = new File("weights2.txt");
 			if(weights2.createNewFile()) {
-				System.out.println("weights2 created");
+				//System.out.println("weights2 created");
 			}else {
-				System.out.println("weights2 already exist");
+				//System.out.println("weights2 already exist");
 			}
 			FileWriter weights2W = new FileWriter("weights2.txt");
 			for(int i=0;i<this.weights2.length;i++) {
@@ -237,9 +292,9 @@ public class NumNet {
 			//-------------------------------------------------------
 			File weights3 = new File("weights3.txt");
 			if(weights3.createNewFile()) {
-				System.out.println("weights3 created");
+				//System.out.println("weights3 created");
 			}else {
-				System.out.println("weights3 already exist");
+				//System.out.println("weights3 already exist");
 			}
 			FileWriter weights3W = new FileWriter("weights3.txt");
 			for(int i=0;i<this.weights3.length;i++) {
@@ -255,9 +310,9 @@ public class NumNet {
 			//-------------------------------------------------------
 			File biase1 = new File("biase1.txt");
 			if(biase1.createNewFile()) {
-				System.out.println("biase1 created");
+				//System.out.println("biase1 created");
 			}else {
-				System.out.println("biase1 already exist");
+				//System.out.println("biase1 already exist");
 			}
 			FileWriter biase1W = new FileWriter("biase1.txt");
 			for(int i=0;i<this.biase1.length;i++) {
@@ -271,9 +326,9 @@ public class NumNet {
 			//-------------------------------------------------------
 			File biase2 = new File("biase2.txt");
 			if(biase2.createNewFile()) {
-				System.out.println("biase2 created");
+				//System.out.println("biase2 created");
 			}else {
-				System.out.println("biase2 already exist");
+				//System.out.println("biase2 already exist");
 			}
 			FileWriter biase2W = new FileWriter("biase2.txt");
 			for(int i=0;i<this.biase2.length;i++) {
@@ -287,9 +342,9 @@ public class NumNet {
 			//-------------------------------------------------------
 			File biase3 = new File("biase3.txt");
 			if(biase3.createNewFile()) {
-				System.out.println("biase3 created");
+				//System.out.println("biase3 created");
 			}else {
-				System.out.println("biase3 already exist");
+				//System.out.println("biase3 already exist");
 			}
 			FileWriter biase3W = new FileWriter("biase3.txt");
 			for(int i=0;i<this.biase3.length;i++) {
@@ -305,6 +360,96 @@ public class NumNet {
 		}
 	}
 	
+	public double[][] readData(String path,int width,int height) {
+		//First line of the input data should be how many lines does it have
+		double[][] data= new double[width][height];
+		try {
+			File file = new File(path);
+			Scanner reader = new Scanner(file);
+			int i = 0;
+			int j = 0;
+			while (reader.hasNext()) {
+				data[j][i] = reader.nextDouble();
+				i++;
+				if(i == height) {
+					j++;
+					i = 0;
+				}
+			}
+			reader.close();
+		}catch(FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		return data;
+	}
+	
+	public int[] readDataInt(String path,int length) {
+		//First line of the input data should be how many lines does it have
+		int[] data= new int[length];
+		try {
+			File file = new File(path);
+			Scanner reader = new Scanner(file);
+			int i = 0;
+			while (reader.hasNext()) {
+				data[i] = reader.nextInt();
+				i++;
+			}
+			reader.close();
+		}catch(FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		return data;
+	}
+	
+	public double[] readDataDouble(String path,int length) {
+		//First line of the input data should be how many lines does it have
+		double[] data= new double[length];
+		try {
+			File file = new File(path);
+			Scanner reader = new Scanner(file);
+			int i = 0;
+			while (reader.hasNext()) {
+				data[i] = reader.nextDouble();
+				i++;
+			}
+			reader.close();
+		}catch(FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		return data;
+	}
+	
+	public int getLength(String path) {
+		int i = 0;
+		try {
+			File file = new File(path);
+			Scanner reader = new Scanner(file);
+			while (reader.hasNext()) {
+				i++;
+				reader.nextInt();
+			}
+			reader.close();
+		}catch(FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		System.out.println(i);
+		return i;
+	}
+	
 	public static void main(String[] args) {
+		NumNet net = new NumNet(5,5);
+		net.NotRandomSetUp();
+		Random r = new Random();
+		int i = 0;
+		while(true) {
+			i++;
+			if(i%1000==0) {
+				net.train(r.nextInt(net.examples), 0.1,true);
+				//net.updateData();
+			}else {
+				net.train(r.nextInt(net.examples), 0.1,false);
+			}
+		}
+		
 	}
 }
